@@ -1,1 +1,16 @@
-# This file makes Python treat the directory as a package
+"""
+Account Service with Security Headers and CORS
+"""
+from flask import Flask
+from flask_talisman import Talisman
+from flask_cors import CORS
+from service.routes import create_app
+
+# Create the Flask app
+app = create_app()
+
+# Initialize Talisman for security headers
+talisman = Talisman(app)
+
+# Initialize CORS for cross-origin resource sharing
+CORS(app)

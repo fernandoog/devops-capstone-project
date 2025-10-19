@@ -6,8 +6,10 @@ import json
 from service import status
 from service.routes import app
 from service.models import Account, db
+from service import talisman
 
 BASE_URL = "/accounts"
+HTTPS_ENVIRON = {'wsgi.url_scheme': 'https'}
 
 class TestAccountService(unittest.TestCase):
     """Test Cases for Account Service"""
@@ -19,6 +21,8 @@ class TestAccountService(unittest.TestCase):
         app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
         cls.app = app
         cls.client = app.test_client()
+        # Disable forced HTTPS for testing
+        talisman.force_https = False
     
     def setUp(self):
         """This runs before each test"""
@@ -156,3 +160,22 @@ class TestAccountService(unittest.TestCase):
         """It should not allow an illegal method call"""
         resp = self.client.delete(BASE_URL)
         self.assertEqual(resp.status_code, status.HTTP_405_METHOD_NOT_ALLOWED)
+    
+    def test_security_headers(self):
+        """It should return security headers"""
+        resp = self.client.get("/", environ_overrides=HTTPS_ENVIRON)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        
+        # Check for security headers
+        self.assertEqual(resp.headers.get('X-Frame-Options'), 'SAMEORIGIN')
+        self.assertEqual(resp.headers.get('X-Content-Type-Options'), 'nosniff')
+        self.assertEqual(resp.headers.get('Content-Security-Policy'), 'default-src \'self\'; object-src \'none\'')
+        self.assertEqual(resp.headers.get('Referrer-Policy'), 'strict-origin-when-cross-origin')
+    
+    def test_cors_headers(self):
+        """It should return CORS headers"""
+        resp = self.client.get("/", environ_overrides=HTTPS_ENVIRON)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        
+        # Check for CORS headers
+        self.assertEqual(resp.headers.get('Access-Control-Allow-Origin'), '*')
