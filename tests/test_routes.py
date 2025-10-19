@@ -22,25 +22,28 @@ class TestAccountService(unittest.TestCase):
     
     def setUp(self):
         """This runs before each test"""
-        db.drop_all()
-        db.create_all()
+        with self.app.app_context():
+            db.drop_all()
+            db.create_all()
     
     def tearDown(self):
         """This runs after each test"""
-        db.session.remove()
-        db.drop_all()
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
     
     def _create_accounts(self, count):
         """Helper method to create accounts in bulk"""
         accounts = []
-        for i in range(count):
-            account = Account()
-            account.name = f"Test Account {i}"
-            account.email = f"test{i}@example.com"
-            account.address = f"{i} Test Street"
-            account.phone_number = f"555-{i:04d}"
-            account.save()
-            accounts.append(account)
+        with self.app.app_context():
+            for i in range(count):
+                account = Account()
+                account.name = f"Test Account {i}"
+                account.email = f"test{i}@example.com"
+                account.address = f"{i} Test Street"
+                account.phone_number = f"555-{i:04d}"
+                account.save()
+                accounts.append(account)
         return accounts
     
     def test_create_account(self):
@@ -73,14 +76,16 @@ class TestAccountService(unittest.TestCase):
     def test_read_an_account(self):
         """It should Read a single Account"""
         # Create an account first
-        test_account = Account()
-        test_account.name = "Test Account"
-        test_account.email = "test@example.com"
-        test_account.address = "123 Test St"
-        test_account.phone_number = "555-1234"
-        test_account.save()
+        with self.app.app_context():
+            test_account = Account()
+            test_account.name = "Test Account"
+            test_account.email = "test@example.com"
+            test_account.address = "123 Test St"
+            test_account.phone_number = "555-1234"
+            test_account.save()
+            account_id = test_account.id
         
-        resp = self.client.get(f"{BASE_URL}/{test_account.id}")
+        resp = self.client.get(f"{BASE_URL}/{account_id}")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["name"], "Test Account")
@@ -94,12 +99,14 @@ class TestAccountService(unittest.TestCase):
     def test_update_account(self):
         """It should Update an existing Account"""
         # Create an account first
-        test_account = Account()
-        test_account.name = "Original Name"
-        test_account.email = "original@example.com"
-        test_account.address = "123 Original St"
-        test_account.phone_number = "555-0000"
-        test_account.save()
+        with self.app.app_context():
+            test_account = Account()
+            test_account.name = "Original Name"
+            test_account.email = "original@example.com"
+            test_account.address = "123 Original St"
+            test_account.phone_number = "555-0000"
+            test_account.save()
+            account_id = test_account.id
         
         # Update the account
         updated_data = {
@@ -108,7 +115,7 @@ class TestAccountService(unittest.TestCase):
             "address": "456 Updated St",
             "phone_number": "555-9999"
         }
-        resp = self.client.put(f"{BASE_URL}/{test_account.id}", json=updated_data)
+        resp = self.client.put(f"{BASE_URL}/{account_id}", json=updated_data)
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(data["name"], "Updated Name")
@@ -126,16 +133,18 @@ class TestAccountService(unittest.TestCase):
     def test_delete_account(self):
         """It should Delete an Account"""
         # Create an account first
-        test_account = Account()
-        test_account.name = "Test Account"
-        test_account.email = "test@example.com"
-        test_account.save()
+        with self.app.app_context():
+            test_account = Account()
+            test_account.name = "Test Account"
+            test_account.email = "test@example.com"
+            test_account.save()
+            account_id = test_account.id
         
-        resp = self.client.delete(f"{BASE_URL}/{test_account.id}")
+        resp = self.client.delete(f"{BASE_URL}/{account_id}")
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
         
         # Verify it's deleted
-        resp = self.client.get(f"{BASE_URL}/{test_account.id}")
+        resp = self.client.get(f"{BASE_URL}/{account_id}")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
     
     def test_delete_account_not_found(self):
