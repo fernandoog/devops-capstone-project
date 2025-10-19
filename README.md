@@ -1,5 +1,7 @@
 # DevOps Capstone Project - RESTful Service
 
+![Build Status](https://github.com/ferna/devops-capstone-project/actions/workflows/ci-build.yaml/badge.svg)
+
 This project implements a RESTful Account Service using Flask and Test-Driven Development (TDD) principles.
 
 ## Project Structure
