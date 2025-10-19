@@ -1,0 +1,120 @@
+{
+  "apiVersion": "template.openshift.io/v1",
+  "kind": "Template",
+  "metadata": {
+    "name": "postgresql-ephemeral",
+    "annotations": {
+      "description": "PostgreSQL database service, without persistent storage. For more information about using this template, including OpenShift considerations, see https://github.com/sclorg/postgresql-container/.",
+      "iconClass": "icon-postgresql",
+      "tags": "database,postgresql"
+    }
+  },
+  "labels": {
+    "template": "postgresql-ephemeral-template"
+  },
+  "objects": [
+    {
+      "apiVersion": "v1",
+      "kind": "Secret",
+      "metadata": {
+        "name": "${POSTGRESQL_DATABASE}"
+      },
+      "stringData": {
+        "database-name": "${POSTGRESQL_DATABASE}",
+        "database-password": "${POSTGRESQL_PASSWORD}",
+        "database-user": "${POSTGRESQL_USER}"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "name": "${POSTGRESQL_DATABASE}"
+      },
+      "spec": {
+        "ports": [
+          {
+            "port": 5432,
+            "targetPort": 5432
+          }
+        ],
+        "selector": {
+          "name": "${POSTGRESQL_DATABASE}"
+        }
+      }
+    },
+    {
+      "apiVersion": "apps/v1",
+      "kind": "Deployment",
+      "metadata": {
+        "name": "${POSTGRESQL_DATABASE}"
+      },
+      "spec": {
+        "replicas": 1,
+        "selector": {
+          "matchLabels": {
+            "name": "${POSTGRESQL_DATABASE}"
+          }
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "name": "${POSTGRESQL_DATABASE}"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "postgresql",
+                "image": "postgres:13",
+                "ports": [
+                  {
+                    "containerPort": 5432
+                  }
+                ],
+                "env": [
+                  {
+                    "name": "POSTGRESQL_DATABASE",
+                    "value": "${POSTGRESQL_DATABASE}"
+                  },
+                  {
+                    "name": "POSTGRESQL_USER",
+                    "value": "${POSTGRESQL_USER}"
+                  },
+                  {
+                    "name": "POSTGRESQL_PASSWORD",
+                    "value": "${POSTGRESQL_PASSWORD}"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "POSTGRESQL_DATABASE",
+      "displayName": "PostgreSQL Database Name",
+      "description": "Name of the PostgreSQL database accessed",
+      "value": "sampledb",
+      "required": true
+    },
+    {
+      "name": "POSTGRESQL_USER",
+      "displayName": "PostgreSQL Connection Username",
+      "description": "Username for PostgreSQL connection",
+      "value": "user1",
+      "required": true
+    },
+    {
+      "name": "POSTGRESQL_PASSWORD",
+      "displayName": "PostgreSQL Connection Password",
+      "description": "Password for the PostgreSQL connection",
+      "generate": "expression",
+      "from": "[a-zA-Z0-9]{16}",
+      "required": true
+    }
+  ]
+}
