@@ -4,9 +4,8 @@ Test cases for Account Service
 import unittest
 import json
 from service import status
-from service.routes import app
+from service import app, talisman
 from service.models import Account, db
-from service import talisman
 
 BASE_URL = "/accounts"
 HTTPS_ENVIRON = {'wsgi.url_scheme': 'https'}
