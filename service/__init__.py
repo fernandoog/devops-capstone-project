@@ -24,7 +24,7 @@ talisman = Talisman(
 )
 
 # Initialize CORS for cross-origin resource sharing
-CORS(app, 
+CORS(app,
      origins='*',
      allow_headers=['Content-Type', 'Authorization'],
      methods=['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'])
